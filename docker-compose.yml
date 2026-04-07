@@ -1,0 +1,14 @@
+services:
+  openilink-webhook-adapter:
+    build: .
+    container_name: openilink-webhook-adapter
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config:/app/config:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3

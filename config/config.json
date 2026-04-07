@@ -1,0 +1,19 @@
+{
+  "secret": "",
+  "targets": [
+    {
+      "name": "openilink",
+      "url": "",
+      "method": "POST",
+      "headers": {
+        "Authorization": "",
+        "Content-Type": "application/json"
+      },
+      "bodyTemplate": {
+        "content": "{{{message}}}"
+      },
+      "retry": 3,
+      "retryDelay": 1000
+    }
+  ]
+}
