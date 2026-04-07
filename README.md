@@ -40,11 +40,18 @@ docker compose -p openilink-webhook-adapter up -d
 # 健康检查
 curl http://localhost:3000/health
 
-# 发送消息
+# 发送消息（转发给所有 targets）
 curl -X POST http://localhost:3000/webhook?token={secret} \
   -H "Content-Type: application/json" \
   -d '{"text":"hello from curl"}'
+
+# 发送消息（只转发给指定 target）
+curl -X POST http://localhost:3000/webhook?token={secret}&target=openilink \
+  -H "Content-Type: application/json" \
+  -d '{"text":"hello from curl"}'
 ```
+
+> `target` 参数可选，不传则转发给所有配置的 targets，传了则只转发给指定的 target（按 `name` 匹配）
 
 ## 内部流程
 

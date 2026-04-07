@@ -125,9 +125,21 @@ function authMiddleware(req, res, next) {
 // ── 主路由 ────────────────────────────────────────────────
 app.post('/webhook', authMiddleware, async (req, res) => {
   const config = loadConfig()
+  const targetName = req.query.target
 
   log('log', `[incoming] from: ${req.ip}`)
   log('log', `[incoming] body: ${JSON.stringify(req.body)}`)
+
+  // 如果指定了 target，只转发给那个；否则转发给所有
+  let targets = config.targets
+  if (targetName) {
+    const found = config.targets.find(t => t.name === targetName)
+    if (!found) {
+      log('warn', `[incoming] target not found: ${targetName}`)
+      return res.status(400).json({ error: `Target '${targetName}' not found` })
+    }
+    targets = [found]
+  }
 
   const message = buildMessage(req.body)
   const results = []
@@ -135,7 +147,7 @@ app.post('/webhook', authMiddleware, async (req, res) => {
   // 并行向所有 targets 发送，提高吞吐量
   // 如果需要保证顺序可改为 for...of 串行
   await Promise.all(
-    config.targets.map(async (target) => {
+    targets.map(async (target) => {
       const payload = renderTemplate(target.bodyTemplate, message)
       const result = await sendWithRetry(target, payload)
       results.push({ target: target.name, ...result })
@@ -157,6 +169,7 @@ app.get('/health', (req, res) => {
 
 app.listen(3000, () => {
   log('log', 'Webhook gateway running on :3000')
-  log('log', 'POST /webhook  - receive and forward')
-  log('log', 'GET  /health   - healthcheck')
+  log('log', 'POST /webhook?token=xxx&target=name  - receive and forward to specific target')
+  log('log', 'POST /webhook?token=xxx              - receive and forward to all targets')
+  log('log', 'GET  /health                         - healthcheck')
 })
